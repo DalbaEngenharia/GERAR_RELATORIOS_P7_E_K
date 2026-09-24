@@ -56,14 +56,14 @@ os.chdir(base_dir)
 # CONFIG
 # =========================
 homologacao = False
-teste = 1
+teste = 0
 
 chrome_options = Options()
 
 # =========================
 # PERFIL
 # =========================
-profile_path = os.path.join(base_dir, "chrome_profile")
+profile_path = os.path.join(r"C:\Users\DALBAPY\Desktop\Scripts\.profile_padrao\chrome_profile")
 chrome_options.add_argument(f"--user-data-dir={profile_path}")
 
 # =========================
@@ -149,7 +149,10 @@ sel_ambiente(driver, wait, "4", homologacao, DataRetroativaBool, DataRetroativa)
 time.sleep(10)
 from loop_Main import loop
 loop(driver)
-
+from conversao import converter_xmls_para_xlsx
+log("CONVERTENDO XML -> XLSX")
+converter_xmls_para_xlsx()
+log("CONVERSÃO REALIZADO")
 ###################
 log("FINALIZANDO")
 time.sleep(5)

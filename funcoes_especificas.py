@@ -1,7 +1,6 @@
 import time
 from datetime import date, timedelta
 import os
-
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.action_chains import ActionChains
@@ -138,9 +137,13 @@ def pesquisar(driver, pesquisa, realizar_pesquisa):
         By.CSS_SELECTOR,
         "button.button-image"
     )
-
-    btn.click()
-
+    for _ in range (0, 6): 
+        time.sleep(0.3)
+        try: 
+            btn.click()
+            break
+        except: 
+            pass
 
 def retorna_datas_MATR260():
 
@@ -181,44 +184,191 @@ def retorna_datas_MATR900():
         ultimo_dia_mes_anterior.strftime("%d/%m/%Y")
     )
 
-
 def renomear_download(nome, texto):
+    import os
     import subprocess
+    import time
 
+    print("========================================")
+    print("FECHANDO MICROSOFT EDGE")
+    print("========================================")
+
+    # Fecha o Microsoft Edge
     subprocess.run(
-        ["taskkill", "/F", "/IM", "EXCEL.EXE"],
+        ["taskkill", "/F", "/IM", "msedge.exe"],
         stdout=subprocess.DEVNULL,
-        stderr=subprocess.DEVNULL
-    )    
-    pasta = r"C:\Users\gustavo.elicker\Desktop\ARQ_HOMOLOG"
+        stderr=subprocess.DEVNULL,
+        creationflags=subprocess.CREATE_NO_WINDOW
+    )
+
+    # Dá um pequeno tempo para o Windows liberar os arquivos
+    time.sleep(2)
+
+    # ============================================================
+    # Caminhos
+    # ============================================================
+
+    pasta = os.path.join(
+        os.path.expanduser("~"),
+        "Desktop",
+        "Arquivos_Protheus"
+    )
 
     caminho_atual = os.path.join(
         pasta,
         nome
     )
 
-    # Pega a extensão original
+    # ============================================================
+    # Extensão original
+    # ============================================================
+
     extensao = os.path.splitext(nome)[1]
 
-    # Caracteres inválidos para nomes de arquivos Windows
-    texto = texto.replace("/", "-")
+    # ============================================================
+    # Limpar caracteres inválidos
+    # ============================================================
+
+    texto = str(texto).strip()
+
+    caracteres_invalidos = '<>:"/\\|?*'
+
+    for caractere in caracteres_invalidos:
+        texto = texto.replace(caractere, "-")
+
+    # Remove pontos/espaços no final
+    texto = texto.rstrip(" .")
 
     caminho_novo = os.path.join(
         pasta,
         texto + extensao
     )
 
-    print("Arquivo atual:", caminho_atual)
-    print("Novo arquivo:", caminho_novo)
-    for _ in range(10): 
-        try:  
+    print("\n========================================")
+    print("CAMINHOS")
+    print("========================================")
+
+    print("Pasta:")
+    print(pasta)
+
+    print("\nArquivo atual:")
+    print(caminho_atual)
+
+    print("\nNovo arquivo:")
+    print(caminho_novo)
+
+    # ============================================================
+    # Verificar arquivo atual
+    # ============================================================
+
+    if not os.path.exists(caminho_atual):
+
+        print(
+            "\nERRO: arquivo original não encontrado:"
+        )
+
+        print(caminho_atual)
+
+        return False
+
+    # ============================================================
+    # Verificar se novo nome já existe
+    # ============================================================
+
+    if os.path.exists(caminho_novo):
+
+        print(
+            "\nERRO: já existe um arquivo com o novo nome:"
+        )
+
+        print(caminho_novo)
+
+        return False
+
+    # ============================================================
+    # Renomear
+    # ============================================================
+
+    print("\n========================================")
+    print("RENOMEANDO")
+    print("========================================")
+
+    for tentativa in range(10):
+
+        try:
+
             os.rename(
                 caminho_atual,
                 caminho_novo
             )
-            break
-        except:
-            time.sleep(5)
+
+            print(
+                f"\nArquivo renomeado com sucesso "
+                f"na tentativa {tentativa + 1}."
+            )
+
+            print(
+                "Novo nome:",
+                os.path.basename(caminho_novo)
+            )
+
+            return True
+
+        except PermissionError as e:
+
+            print(
+                f"Arquivo ainda bloqueado "
+                f"(tentativa {tentativa + 1}/10):"
+            )
+
+            print(e)
+
+            time.sleep(3)
+
+        except FileNotFoundError as e:
+
+            print(
+                f"Arquivo não encontrado: {e}"
+            )
+
+            return False
+
+        except FileExistsError as e:
+
+            print(
+                f"O arquivo de destino já existe: {e}"
+            )
+
+            return False
+
+        except Exception as e:
+
+            print(
+                f"Erro ao renomear "
+                f"(tentativa {tentativa + 1}/10):"
+            )
+
+            print(e)
+
+            time.sleep(3)
+
+    # ============================================================
+    # Falha final
+    # ============================================================
+
+    print(
+        "\n========================================"
+    )
+
+    print(
+        "ERRO: não foi possível renomear o arquivo."
+    )
+
+    print(
+        "========================================"
+    )
+
+    return False
 
 def encontrar_txtPath(driver, timeout=30):
     import time
